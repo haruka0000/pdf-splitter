@@ -1,1 +1,1 @@
-# pdf-spliter
+# pdf-splitter
