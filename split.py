@@ -90,8 +90,8 @@ def pdf_splitter(opts):
     df          = pd.DataFrame(data, columns=["title", "from"]).set_index('title')#[1:]
     
     #### option ####
-    df.at['Power Seat Systems', 'from'] = 378
-    df.at['Power Seat Systems', 'to']   = 380
+    # df.at['Power Seat Systems', 'from'] = 378
+    # df.at['Power Seat Systems', 'to']   = 380
     ################
 
     to_page_num = df.loc[:,"from"].tolist()[1:] + [num_pages+1]
