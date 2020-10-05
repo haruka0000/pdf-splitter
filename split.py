@@ -117,7 +117,7 @@ def pdf_splitter(opts):
                 file_count += 1
                 pdf_file_name   = file_prefix + '%03d_'%(file_count) + str(row.name).replace(':','_').replace('*','_').replace('/', '／') + '.pdf'
                 if math.ceil(round((row['to'] - row['from']) / float(max_num_pages), 5)) > 1:
-                    pdf_file_name = pdf_file_name.replace('.pdf', '-%02d.pdf'%(page_count/max_num_pages)) 
+                    pdf_file_name = pdf_file_name.replace('.pdf', '-%02d.pdf'%(math.ceil(round(page_count/float(max_num_pages), 5)))) 
                 output_path     = os.path.join(output_dir, pdf_file_name)
                 ## Important!! Remove annotations from file. Writing error(stop) will occur without this processs.
                 # pdf_writer.removeLinks()
@@ -127,7 +127,6 @@ def pdf_splitter(opts):
                 pdf_writer = PyPDF2.PdfFileWriter() ## initialize
                 print('Added page to PDF file: ' + row.name + ' - Page #:', end='')
         print()
-    pdf_reader.close()
     # Delete temp file
     os.unlink(tmp_file)
 
