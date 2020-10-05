@@ -1,4 +1,3 @@
-
 import PyPDF2
 import os
 import time
@@ -6,6 +5,7 @@ import shutil
 import sys
 import argparse
 import pandas as pd
+import math
 
 # Helper class used to map pages numbers to bookmarks
 class BookmarkToPageMap(PyPDF2.PdfFileReader):
@@ -44,7 +44,7 @@ class BookmarkToPageMap(PyPDF2.PdfFileReader):
             if isinstance(title, PyPDF2.generic.ByteStringObject): 
                 title = title.decode('utf-8', errors="ignore") 
             title = title.replace('\r', '').replace('\n', '')
-            result[title] = page_id_to_page_numbers.get(page_idnum, '???')
+            result[title] = page_id_to_page_numbers.get(page_idnum, '???')+1
         return result
 
 def pdf_splitter(opts):
@@ -52,6 +52,10 @@ def pdf_splitter(opts):
     output_dir      = opts.output
     file_prefix     = opts.prefix
     src_delete_flag = bool(opts.delete)
+    max_num_pages   = opts.max
+    
+    if file_prefix != '':
+        file_prefix = file_prefix + '-'
 
     tmp_dir         = '.tmp/' # Temporary dir
     tmp_file        = os.path.join(tmp_dir, 'tmp.pdf')
@@ -83,85 +87,46 @@ def pdf_splitter(opts):
     print('Number of page: ' + str(num_pages))
 
     data        = pdf_obj.getDestinationPageNumbers().items()
-    df          = pd.DataFrame(data, columns=["title", "from"]).set_index('title')
+    df          = pd.DataFrame(data, columns=["title", "from"]).set_index('title')#[1:]
     
     #### option ####
     df.at['Power Seat Systems', 'from'] = 378
     df.at['Power Seat Systems', 'to']   = 380
+    ################
 
-    to_page_num = [num-1 for num in df.loc[:,"from"].tolist()[1:]] + [num_pages]
+    to_page_num = df.loc[:,"from"].tolist()[1:] + [num_pages+1]
     df['to']    = to_page_num
     df          = df.sort_values('from')
-    print(df)
     
+    print(df)
+
+    file_count  = 0
     for i, row in df.iterrows():
         pdf_writer = PyPDF2.PdfFileWriter()
-        page_idx = 0
+
+        page_count  = 0
         print('Added page to PDF file: ' + row.name + ' - Page #:', end='')
-        for j in range(row['from'], row['to']+1):
+        for j in range(row['from'], row['to']):
+            print(str(j) + ',', end='')
             pdf_page = pdf_reader.getPage(j-1)
             pdf_writer.addPage(pdf_page)
-            print(str(j) + ',', end='')
-            page_idx += 1
+            pdf_writer.removeLinks()
+            page_count += 1
+            if (page_count != 0 and page_count % max_num_pages == 0) or j == row['to'] - 1:
+                print()
+                file_count += 1
+                pdf_file_name   = file_prefix + '%03d_'%(file_count) + str(row.name).replace(':','_').replace('*','_').replace('/', '／') + '.pdf'
+                if math.ceil(round((row['to'] - row['from']) / float(max_num_pages), 5)) > 1:
+                    pdf_file_name = pdf_file_name.replace('.pdf', '-%02d.pdf'%(page_count/max_num_pages)) 
+                output_path     = os.path.join(output_dir, pdf_file_name)
+                ## Important!! Remove annotations from file. Writing error(stop) will occur without this processs.
+                # pdf_writer.removeLinks()
+                with open(output_path, 'wb') as pdf_output_file:
+                    pdf_writer.write(pdf_output_file)
+                    print(' => Created PDF file: ' + output_path)
+                pdf_writer = PyPDF2.PdfFileWriter() ## initialize
+                print('Added page to PDF file: ' + row.name + ' - Page #:', end='')
         print()
-        pdf_file_name   = file_prefix + str(row.name).replace(':','_').replace('*','_') + '.pdf'
-        output_path     = os.path.join(output_dir, pdf_file_name)
-        
-        pdf_output_file = open(output_path, 'wb')
-        pdf_writer.write(pdf_output_file)
-        pdf_output_file.close()
-        print('Created PDF file: ' + output_path)
-    """
-        template = '%-5s  %s'
-        print (template % ('Page', 'Title'))
-        print (template % (p+1,t))
-    
-        new_page_num    = p + 1
-        new_page_name   = t
-
-        if prev_page_num == 0 and prev_page_name == '':
-            print('First Page...')
-            prev_page_num   = new_page_num
-            prev_page_name  = new_page_name
-        else:
-            if new_page_name:
-                print('Next Page...')
-                pdf_writer = PyPDF2.PdfFileWriter()
-                page_idx = 0 
-                print(prev_page_num, new_page_num)
-                for j in range(prev_page_num, new_page_num):
-                    pdf_page = pdf_reader.getPage(j-1)
-                    pdf_writer.insertPage(pdf_page, page_idx)
-                    print('Added page to PDF file: ' + prev_page_name + ' - Page #: ' + str(j))
-                    page_idx+=1
-
-                pdf_file_name = file_prefix + str(str(prev_page_name).replace(':','_')).replace('*','_') + '.pdf'
-                pdf_output_file = open(os.path.join(output_dir, pdf_file_name), 'wb')
-                pdf_writer.write(pdf_output_file)
-                pdf_output_file.close()
-                print('Created PDF file: ' + os.path.join(output_dir, pdf_file_name))
-
-        i = prev_page_num
-        prev_page_num = new_page_num
-        prev_page_name = new_page_name
-
-        
-        #Split the last page
-        print('Last Page...')
-        pdf_writer = PyPDF2.PdfFileWriter()
-        page_idx = 0 
-        for i in range(prev_page_num, num_pages + 1):
-            pdf_page = pdf_reader.getPage(i-1)
-            pdf_writer.insertPage(pdf_page, page_idx)
-            # print('Added page to PDF file: ' + prev_page_name + ' - Page #: ' + str(i))
-            page_idx+=1
-        
-        pdf_file_name = file_prefix + str(str(prev_page_name).replace(':','_')).replace('*','_') + '.pdf'
-        pdf_output_file = open(output_dir + pdf_file_name, 'wb')
-        pdf_writer.write(pdf_output_file)
-        pdf_output_file.close()
-        print('Created PDF file: ' + output_dir + pdf_file_name)
-    """
     pdf_reader.close()
     # Delete temp file
     os.unlink(tmp_file)
@@ -174,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument('--src', type=str, required=True, help='input pdf')
     parser.add_argument('--output', type=str, default='./output', help='output path')
     parser.add_argument('--prefix', type=str, default='', help='prefix for th files')
+    parser.add_argument('--max', type=int, default=20, help='Max pages num in each files.')
     parser.add_argument('--delete', type=int, default=0, help='path for outputs')
     args = parser.parse_args()
 
