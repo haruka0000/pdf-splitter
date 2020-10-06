@@ -1,0 +1,14 @@
+th, td {
+    width: 300px;
+}
+thead, tbody {
+    display: block;
+}
+tbody {
+    overflow: auto;
+    overflow-y: scroll;
+    height: 200px;
+}
+.cellinputs {
+    width: 300px;
+}
