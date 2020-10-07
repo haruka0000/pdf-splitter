@@ -44,7 +44,7 @@ class BookmarkToPageMap(PyPDF2.PdfFileReader):
             if isinstance(title, PyPDF2.generic.ByteStringObject): 
                 title = title.decode('utf-8', errors="ignore") 
             title = title.replace('\r', '').replace('\n', '')
-            result[title] = page_id_to_page_numbers.get(page_idnum, '???')+1
+            result[title] = page_id_to_page_numbers.get(page_idnum, '???') + 1
         return result
 
 class pdfSplitter():
@@ -84,8 +84,11 @@ class pdfSplitter():
         ################
 
         to_page_num = df.loc[:,"from"].tolist()[1:] + [self.num_pages+1]
+        from_page_num = df.loc[:,"from"].tolist()
+        to_page_num = [to_page_num[i]-1 if to_page_num[i] > from_page_num[i] else to_page_num[i] for i in range(len(df))]
+        to_page_num = to_page_num
         df['to']    = to_page_num
-        df          = df.sort_values('from')
+        df          = df.sort_values(['from', 'to'])
         
         self.df = df
 
@@ -104,13 +107,13 @@ class pdfSplitter():
 
             page_count  = 0
             print('Added page to PDF file: ' + row.name + ' - Page #:', end='')
-            for j in range(row['from'], row['to']):
+            for j in range(row['from'], row['to']+1):
                 print(str(j) + ',', end='')
                 pdf_page = self.pdf_reader.getPage(j-1)
                 pdf_writer.addPage(pdf_page)
                 pdf_writer.removeLinks()
                 page_count += 1
-                if (page_count != 0 and page_count % max_num_pages == 0) or j == row['to'] - 1:
+                if (page_count != 0 and page_count % max_num_pages == 0) or j == row['to']:
                     print()
                     file_count += 1
                     pdf_file_name   = file_prefix + '%03d_'%(file_count) + str(row.name).replace(':','_').replace('*','_').replace('/', '／') + '.pdf'
