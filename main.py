@@ -7,7 +7,7 @@ try:
     from tkinter import Tk, filedialog
 except:
     from Tkinter import Tk, filedialog
-pdf_splitter = None
+
 
 def onCloseWindow(page, sockets):
 	print(page + 'が閉じられました。プログラムを終了します。')
@@ -29,8 +29,23 @@ def get_table_data(path):
     pdf_splitter = pdfSplitter(path)
     columns = pdf_splitter.df.reset_index().columns.tolist()
     data    = [columns] + pdf_splitter.df.reset_index().values.tolist()
-    # print(data)
     return data
 
+
+@eel.expose
+def update_data(data):
+    # print(data)
+    data = [d for d in data if d != [] and d[0] != ""]
+    print(data)
+    columns = data[0]
+    df = pd.DataFrame(data[1:], columns=columns)
+    df = df.set_index(columns[0])
+    df[columns[1]] = df[columns[1]].astype(int)
+    df[columns[2]] = df[columns[2]].astype(int)
+    df = df.sort_values([columns[1], columns[2]])
+    print(df)
+    return [columns] + df.reset_index().values.tolist()
+    
+    
 eel.init("web")
 eel.start("main.html", close_callback=onCloseWindow)

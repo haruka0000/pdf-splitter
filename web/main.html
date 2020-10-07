@@ -12,7 +12,7 @@
             <!-- <thead></thead><tbody></tbody> -->
         </table>
     </div>
-
+    <button id="submit_btn" name="submit_btn" onclick="submit_table()">commit</button>
     <!-- Python用 -->
     <script type="text/javascript" src="/eel.js"></script>
     
@@ -20,17 +20,24 @@
         var pdf_path = "";
         var table = document.getElementById('maintable');
         async function run() {
+            let data = await eel.get_table_data(pdf_path)();
+            set_data(data);
+        }
+
+        function set_data(data){
+            for (var i = 0; i < 5; i++) {
+                data.push(["", "" ,""])
+            }
             table.innerHTML = ''
             var thead = document.createElement('thead');
             var tbody = document.createElement('tbody');
             table.appendChild(thead);
             table.appendChild(tbody);
-            let data = await eel.get_table_data(pdf_path)();
             // tr部分のループ
             for (var i = 0; i < data.length; i++) {
                 // tr要素を生成
                 var tr = document.createElement('tr');
-
+                tr.name = "table_row"
                 // th・td部分のループ
                 for (var j = 0; j < data[i].length; j++) {
                     // 1行目のtr要素の時
@@ -42,7 +49,10 @@
                         var td = document.createElement('td');
                         var cell = document.createElement('input');
                         cell.classList.add('cellinputs');
-                        cell.value = data[i][j];
+                        cell.name = "table_cell"
+                        if (data[i][j] != ""){
+                            cell.value = data[i][j];
+                        }
                         td.appendChild(cell)
                         tr.appendChild(td) 
                     }
@@ -62,6 +72,34 @@
             pdf_path = await eel.btn_ResimyoluClick()();
             // 再描画
             run();
+        }
+
+        async function submit_table(){
+            var table = document.getElementById('maintable');
+            var t_rows = table.getElementsByTagName('tr');
+            var t_arr = [];
+            // th の取得
+            var th_row = t_rows[0].getElementsByTagName("th");
+            var r_arr = [];
+            for (var i = 0; i < th_row.length; i++) {
+                r_arr.push(th_row[i].textContent);
+            }
+            t_arr.push(r_arr);
+            
+            // td の取得
+            for (var i = 1; i < t_rows.length; i++) {
+                var r_arr = [];
+                var cells = t_rows[i].getElementsByTagName("input")
+                for (var j = 0; j < cells.length; j++) {
+                    r_arr.push(cells[j].value);
+                }
+                t_arr.push(r_arr);
+            }
+
+            console.log(t_arr);
+            let data = await eel.update_data(t_arr)();
+            console.log(data);
+            set_data(data);
         }
     </script>
 </body>
