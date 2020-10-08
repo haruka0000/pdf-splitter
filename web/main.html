@@ -1,18 +1,42 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Eel</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <title>PDF-Splitter</title>
+    <link rel="stylesheet" type="text/css" href="css/my_style.css">
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:200,300,400,700,900|Oswald:400,700"> -->
+    <link rel="stylesheet" href="fonts/icomoon/style.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/magnific-popup.css">
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/owl.carousel.min.css">
+    <link rel="stylesheet" href="css/owl.theme.default.min.css">
+    <link rel="stylesheet" href="css/bootstrap-datepicker.css">
+    <link rel="stylesheet" href="css/mediaelementplayer.css">
+    <link rel="stylesheet" href="css/animate.css">
+    <link rel="stylesheet" href="fonts/flaticon/font/flaticon.css">
+    <link rel="stylesheet" href="css/fl-bigmug-line.css">
+    <link rel="stylesheet" href="css/aos.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <button id="pdf_path" name="pdf_path" onclick="getFolder()">Import PDF</button>
     <!--テーブル生成位置-->
-    <div>
-        <table id='maintable'>
-            <!-- <thead></thead><tbody></tbody> -->
-        </table>
+    <div id="container">
+        <div id="top-area">
+            <button id="pdf_path" name="pdf_path" class="btn btn-white" onclick="getFolder()">Import PDF</button>
+            <label id="pdf-path-disp" ></label>
+        </div>
+        <div id="table-area">
+            <table id='maintable'>
+                <!-- <thead></thead><tbody></tbody> -->
+            </table>
+        </div>
+        <div id="bottom_area">
+            <button id="submit_btn" name="submit_btn" class="btn btn-primary" onclick="submit_table()">commit</button>
+            <label class="label" style="padding-left: 30px;">Prefix:</label>
+            <input type="text" class="search-input" style="width: 200px;"></input>
+            <label class="label" style="padding-left: 2px;">ex.) [prefix]-[01]-[title].pdf</label>
+        </div>
     </div>
-    <button id="submit_btn" name="submit_btn" onclick="submit_table()">commit</button>
     <!-- Python用 -->
     <script type="text/javascript" src="/eel.js"></script>
     
@@ -39,21 +63,39 @@
                 var tr = document.createElement('tr');
                 tr.name = "table_row"
                 // th・td部分のループ
-                for (var j = 0; j < data[i].length; j++) {
+                for (var j = 0; j < data[i].length+1; j++) {
                     // 1行目のtr要素の時
                     if(i === 0) {
                         var th = document.createElement('th');
-                        th.textContent = data[i][j];
+                        if (j == 0){
+                            th.textContent = "";
+                            th.style = "width: 30px;"
+                        } else{
+                            th.textContent = data[i][j-1];
+                            if (j == 1){ th.classList.add('text-cell'); }else{ th.classList.add('number-cell'); }
+                        }
                         tr.appendChild(th)
                     } else{
                         var td = document.createElement('td');
-                        var cell = document.createElement('input');
-                        cell.classList.add('cellinputs');
-                        cell.name = "table_cell"
-                        if (data[i][j] != ""){
-                            cell.value = data[i][j];
+                        if (j === 0){
+                            td.textContent = i;
+                            td.style = "width: 30px; font-size: 24;"
+                        } else{
+                            var cell = document.createElement('input');
+                            cell.classList.add('cellinputs', 'search-input');
+                            if (j == 1){
+                                cell.classList.add('text-cell');
+                                td.classList.add('text-cell');
+                            } else{
+                                cell.classList.add('number-cell');
+                                td.classList.add('number-cell');
+                            }
+                            cell.name = "table_cell"
+                            if (data[i][j] != ""){
+                                cell.value = data[i][j-1];
+                            }
+                            td.appendChild(cell)
                         }
-                        td.appendChild(cell)
                         tr.appendChild(td) 
                     }
                 }
@@ -70,22 +112,29 @@
         async function getFolder() {
             // ファイル入力
             pdf_path = await eel.btn_ResimyoluClick()();
+            pdf_path_disp = document.getElementById("pdf-path-disp");
+            pdf_path_disp.textContent = pdf_path;
             // 再描画
             run();
         }
 
         async function submit_table(){
+            table_d = get_table_inputs();
+            let data = await eel.update_data(table_d)();
+            set_data(data);
+        }
+
+        function get_table_inputs(){
             var table = document.getElementById('maintable');
             var t_rows = table.getElementsByTagName('tr');
             var t_arr = [];
             // th の取得
             var th_row = t_rows[0].getElementsByTagName("th");
             var r_arr = [];
-            for (var i = 0; i < th_row.length; i++) {
+            for (var i = 1; i < th_row.length; i++) {
                 r_arr.push(th_row[i].textContent);
             }
             t_arr.push(r_arr);
-            
             // td の取得
             for (var i = 1; i < t_rows.length; i++) {
                 var r_arr = [];
@@ -95,11 +144,7 @@
                 }
                 t_arr.push(r_arr);
             }
-
-            console.log(t_arr);
-            let data = await eel.update_data(t_arr)();
-            console.log(data);
-            set_data(data);
+            return t_arr
         }
     </script>
 </body>

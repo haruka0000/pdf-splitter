@@ -76,7 +76,7 @@ class pdfSplitter():
         print('Number of page: ' + str(self.num_pages))
 
         data        = self.pdf_obj.getDestinationPageNumbers().items()
-        df          = pd.DataFrame(data, columns=["title", "from"]).set_index('title')#[1:]
+        df          = pd.DataFrame(data, columns=["title", "from"])#.set_index('title')#[1:]
         
         #### option ####
         # df.at['Power Seat Systems', 'from'] = 378
@@ -88,8 +88,6 @@ class pdfSplitter():
         to_page_num = [to_page_num[i]-1 if to_page_num[i] > from_page_num[i] else to_page_num[i] for i in range(len(df))]
         to_page_num = to_page_num
         df['to']    = to_page_num
-        df          = df.sort_values(['from', 'to'])
-        
         self.df = df
 
 
@@ -106,7 +104,7 @@ class pdfSplitter():
             pdf_writer = PyPDF2.PdfFileWriter()
 
             page_count  = 0
-            print('Added page to PDF file: ' + row.name + ' - Page #:', end='')
+            print('Added page to PDF file: ' + row['title'] + ' - Page #:', end='')
             for j in range(row['from'], row['to']+1):
                 print(str(j) + ',', end='')
                 pdf_page = self.pdf_reader.getPage(j-1)
@@ -116,7 +114,7 @@ class pdfSplitter():
                 if (page_count != 0 and page_count % max_num_pages == 0) or j == row['to']:
                     print()
                     file_count += 1
-                    pdf_file_name   = file_prefix + '%03d_'%(file_count) + str(row.name).replace(':','_').replace('*','_').replace('/', '／') + '.pdf'
+                    pdf_file_name   = file_prefix + '%03d_'%(file_count) + str(row['title']).replace(':','_').replace('*','_').replace('/', '／') + '.pdf'
                     if math.ceil(round((row['to'] - row['from']) / float(max_num_pages), 5)) > 1:
                         pdf_file_name = pdf_file_name.replace('.pdf', '-%02d.pdf'%(math.ceil(round(page_count/float(max_num_pages), 5)))) 
                     output_path     = os.path.join(output_dir, pdf_file_name)
@@ -126,7 +124,7 @@ class pdfSplitter():
                         pdf_writer.write(pdf_output_file)
                         print(' => Created PDF file: ' + output_path)
                     pdf_writer = PyPDF2.PdfFileWriter() ## initialize
-                    print('Added page to PDF file: ' + row.name + ' - Page #:', end='')
+                    print('Added page to PDF file: ' + row['title'] + ' - Page #:', end='')
             print()
         # Delete temp file
         os.unlink(self.tmp_file)
