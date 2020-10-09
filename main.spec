@@ -4,9 +4,9 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['/home/haruka/pdf-splitter'],
+             pathex=['C:\\Users\\harukat\\pdf-splitter'],
              binaries=[],
-             datas=[('/home/haruka/.pyenv/versions/pdf/lib/python3.8/site-packages/eel/eel.js', 'eel'), ('web', 'web')],
+             datas=[('C:\\Users\\harukat\\Anaconda3\\envs\\PDF-splitter\\lib\\site-packages\\eel\\eel.js', 'eel'), ('web', 'web')],
              hiddenimports=['bottle_websocket'],
              hookspath=[],
              runtime_hooks=[],
