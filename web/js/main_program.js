@@ -1,5 +1,6 @@
 
 var pdf_path = "";
+var num_pages = 0;
 var table = document.getElementById('maintable');
 
 // SUBMITされたとき
@@ -30,8 +31,8 @@ async function get_folder() {
 
 
 async function init_data() {
-    await eel.init_data();
     if (pdf_path != ""){
+        num_pages = await eel.init_data()();
         let data = await eel.get_data()();
         set_data(data);
     }
@@ -44,6 +45,7 @@ async function update_table(){
     await eel.set_prefix(prefix);
     let data = await eel.get_data()();
     set_data(data);
+    update_progressbar(0, "0%");
 }
 
 
@@ -64,6 +66,13 @@ function update_progressbar(value, str_value){
     var p_bar = document.getElementById('split-progress');
     p_bar.value = value;
     p_bar.textContent = str_value;
+    if (value === 100){
+        document.getElementById("split-progress-info").textContent = "Finished successfully.";
+    }else if (value > 0){
+        document.getElementById("split-progress-info").textContent = "Processing... " + str_value;
+    }else{
+        document.getElementById("split-progress-info").textContent = "";
+    }
 }
 
 function set_data(data){
@@ -109,6 +118,8 @@ function set_data(data){
                     } else{
                         cell.classList.add('number-cell');
                         cell.type = "number"
+                        cell.min = 1
+                        cell.max = num_pages
                         td.classList.add('number-cell');
                     }
                     cell.name = "table_cell"

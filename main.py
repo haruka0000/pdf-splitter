@@ -51,8 +51,11 @@ def get_dir_path():
 def init_data():
     global pdf_splitter
     global split_progress
+    if pdf_splitter != None:
+        pdf_splitter.clean_up()
     split_progress  = 0 
     pdf_splitter    = pdfSplitter(input_path)
+    return pdf_splitter.num_pages
 
 
 @eel.expose
@@ -90,7 +93,7 @@ def update_data(data):
     data = [ d for d in data if d != [] and d != [""]*len(columns) ]
     pdf_splitter.df = pd.DataFrame(data[1:], columns=columns)
     pdf_splitter.df["from"][ pdf_splitter.df["from"]=="" ] = 1
-    pdf_splitter.df["to"][ pdf_splitter.df["to"]=="" ] = len(pdf_splitter.num_pages)
+    pdf_splitter.df["to"][ pdf_splitter.df["to"]=="" ] = int(pdf_splitter.num_pages)
     pdf_splitter.df["from"] = pdf_splitter.df["from"].astype(int)
     pdf_splitter.df["to"]   = pdf_splitter.df["to"].astype(int)
     pdf_splitter.df.sort_values(["from", "to"], inplace=True)

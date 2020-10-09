@@ -61,9 +61,10 @@ class pdfSplitter():
         shutil.copy(self.src_file, self.tmp_file)
 
         #Process file
-        pdf_data        = open(self.tmp_file, 'rb')
-        self.pdf_reader = PyPDF2.PdfFileReader(pdf_data)
-        self.pdf_obj    = BookmarkToPageMap(pdf_data)
+        self.pdf_data        = open(self.tmp_file, 'rb')
+        self.pdf_reader = PyPDF2.PdfFileReader(self.pdf_data)
+        self.pdf_obj    = BookmarkToPageMap(self.pdf_data)
+        
 
         if self.pdf_reader.isEncrypted:
             print("Encrypted.")
@@ -132,6 +133,7 @@ class pdfSplitter():
         yield 100 ## progress
 
     def clean_up(self, src_delete_flag=False):
+        self.pdf_data.close()
         # Delete temp file
         os.unlink(self.tmp_file)
         if src_delete_flag == True or src_delete_flag == "True":

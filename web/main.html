@@ -37,7 +37,10 @@
         <div id="right-bottom-area">
             <button id="output_path" class="btn btn-secondary" onclick="get_folder()">Output Folder</button>
             <label id="output-path-disp" ></label><br>
-            <progress id="split-progress" max="100" value="0" style="margin-top: 20px; margin-bottom: 20px;"></progress>
+            <div style="margin-top: 20px; margin-bottom: 20px;">
+                <progress id="split-progress" max="100" value="0"></progress>
+                <label id="split-progress-info"></label>
+            </div>
         </div>
         <div id="bottom_area">
             <button id="commit-btn" style="margin: 2px; width: 200px;" 
