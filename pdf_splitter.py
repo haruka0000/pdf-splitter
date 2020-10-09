@@ -93,7 +93,7 @@ class pdfSplitter():
         self.org_df = df
 
 
-    def split_pdf(self, output_dir, file_prefix='', src_delete_flag=False, max_num_pages=1000):
+    def split_pdf(self, output_dir, file_prefix='', max_num_pages=1000):
         if file_prefix != '':
             file_prefix = file_prefix + '-'
 
@@ -129,12 +129,14 @@ class pdfSplitter():
                     print('Added page to PDF file: ' + row['title'] + ' - Page #:', end='')
             print()
             yield int((i+1)/(len(self.df)+1)*100) ## progress
+        yield 100 ## progress
+
+    def clean_up(self, src_delete_flag=False):
         # Delete temp file
         os.unlink(self.tmp_file)
-
         if src_delete_flag == True or src_delete_flag == "True":
             os.unlink(self.src_file)
-        yield 100 ## progress
+        
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -152,4 +154,5 @@ if __name__ == "__main__":
     max_num_pages   = opts.max
 
     pdf_splitter    = pdfSplitter(src_file)
-    pdf_splitter.split_pdf(output_dir, file_prefix=file_prefix, src_delete_flag=src_delete_flag, max_num_pages=max_num_pages)
+    pdf_splitter.split_pdf(output_dir, file_prefix=file_prefix, max_num_pages=max_num_pages)
+    pdf_splitter.clean_up(src_delete_flag=src_delete_flag)

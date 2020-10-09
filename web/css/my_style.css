@@ -10,7 +10,7 @@ tbody {
     margin: 20px;
     display: grid; /* グリッドレイアウト */
     grid-template-rows: 50px 200px 300px 50px;
-    grid-template-columns: 800px 1fr;
+    grid-template-columns: 750px 1fr;
 }
 #top-area{
     grid-row: 1 / 2;
