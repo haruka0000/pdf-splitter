@@ -22,19 +22,33 @@
     <!--テーブル生成位置-->
     <div id="container">
         <div id="top-area">
-            <button id="pdf_path" name="pdf_path" class="btn btn-white" onclick="getFolder()">Import PDF</button>
+            <button id="pdf_path" name="pdf_path" class="btn btn-secondary" onclick="get_file()">Import PDF</button>
             <label id="pdf-path-disp" ></label>
         </div>
         <div id="table-area">
-            <table id='maintable'>
-                <!-- <thead></thead><tbody></tbody> -->
-            </table>
+            <table id='maintable'></table>
+        </div>
+        <div id="right-area">
+            <button id="default-btn" style="margin: 2px; width: 150px;" 
+                class="btn btn-white" onclick="get_org_data()">Default</button><br>
+            <button id="default-btn" style="margin: 2px; width: 150px;" 
+                class="btn btn-white" onclick="clear_data()">All Clear</button>
+        </div>
+        <div id="right-bottom-area">
+            <button id="output_path" class="btn btn-secondary" onclick="get_folder()">Output Folder</button>
+            <label id="output-path-disp" ></label><br>
+            <progress id="split-progress" max="100" value="0"></progress>
         </div>
         <div id="bottom_area">
-            <button id="submit_btn" name="submit_btn" class="btn btn-primary" onclick="submit_table()">commit</button>
+            <button id="commit_btn" style="margin: 2px; width: 200px;" 
+                class="btn btn-black" onclick="update_table()">commit</button>
             <label class="label" style="padding-left: 30px;">Prefix:</label>
-            <input type="text" class="search-input" style="width: 200px;"></input>
+            <input id="prefix" type="text" class="search-input" style="width: 200px;"></input>
             <label class="label" style="padding-left: 2px;">ex.) [prefix]-[01]-[title].pdf</label>
+        </div>
+        <div id="bottom-right-area">
+            <button id="submit_btn" style="margin: 2px; width: 100px;" 
+                class="btn btn-primary" onclick="split_pdf()">Split PDF!!</button>
         </div>
     </div>
     <!-- Python用 -->
@@ -43,13 +57,35 @@
     <script type="text/javascript">
         var pdf_path = "";
         var table = document.getElementById('maintable');
-        async function run() {
-            let data = await eel.get_table_data(pdf_path)();
+        async function init_data() {
+            await eel.init_data(pdf_path);
+            let data = await eel.get_data()();
             set_data(data);
         }
 
+        async function get_org_data() {
+            await eel.set_org_data();
+            let data = await eel.get_data()();
+            set_data(data);
+        }
+
+        async function clear_data(){
+            await eel.clear_data();
+            let data = await eel.get_data()();
+            set_data(data);
+        }
+
+        eel.expose(update_progressbar)
+        function update_progressbar(value, str_value){
+            var p_bar = document.getElementById('split-progress');
+            p_bar.value = value;
+            p_bar.textContent = str_value;
+        }
+
         function set_data(data){
-            for (var i = 0; i < 5; i++) {
+            var empty_rows_num = 5;
+            if (data.length === 1){ empty_rows_num = 10; }
+            for (var i = 0; i < empty_rows_num; i++) {
                 data.push(["", "" ,""])
             }
             table.innerHTML = ''
@@ -69,7 +105,7 @@
                         var th = document.createElement('th');
                         if (j == 0){
                             th.textContent = "";
-                            th.style = "width: 30px;"
+                            th.style = "width: 30px; text-align: center;"
                         } else{
                             th.textContent = data[i][j-1];
                             if (j == 1){ th.classList.add('text-cell'); }else{ th.classList.add('number-cell'); }
@@ -79,7 +115,7 @@
                         var td = document.createElement('td');
                         if (j === 0){
                             td.textContent = i;
-                            td.style = "width: 30px; font-size: 24;"
+                            td.style = "width: 30px; font-size: 24; text-align: center;"
                         } else{
                             var cell = document.createElement('input');
                             cell.classList.add('cellinputs', 'search-input');
@@ -109,18 +145,29 @@
         }
         
         // SUBMITされたとき
-        async function getFolder() {
+        async function get_file() {
             // ファイル入力
-            pdf_path = await eel.btn_ResimyoluClick()();
+            pdf_path = await eel.get_file_path()();
             pdf_path_disp = document.getElementById("pdf-path-disp");
             pdf_path_disp.textContent = pdf_path;
             // 再描画
-            run();
+            init_data();
         }
 
-        async function submit_table(){
-            table_d = get_table_inputs();
-            let data = await eel.update_data(table_d)();
+        // SUBMITされたとき
+        async function get_folder() {
+            // ファイル入力
+            output_path = await eel.get_dir_path()();
+            output_path_disp = document.getElementById("output-path-disp");
+            output_path_disp.textContent = output_path;
+        }
+
+        async function update_table(){
+            var table_d = get_table_inputs();
+            var prefix = document.getElementById('prefix').value;
+            await eel.update_data(table_d);
+            await eel.set_prefix(prefix);
+            let data = await eel.get_data()();
             set_data(data);
         }
 
@@ -145,6 +192,10 @@
                 t_arr.push(r_arr);
             }
             return t_arr
+        }
+
+        async function split_pdf(){
+            await eel.split_pdf();
         }
     </script>
 </body>

@@ -50,9 +50,10 @@ class BookmarkToPageMap(PyPDF2.PdfFileReader):
 class pdfSplitter():
     def __init__(self, src_file):
         self.src_file   = src_file
-        self.tmp_dir         = '.tmp/' # Temporary dir
-        self.tmp_file        = os.path.join(self.tmp_dir, 'tmp.pdf')
-
+        self.tmp_dir    = '.tmp/' # Temporary dir
+        self.tmp_file   = os.path.join(self.tmp_dir, 'tmp.pdf')
+        self.prefix     = ""   
+        
         # Create tmp directory
         if not os.path.exists(self.tmp_dir):
             os.makedirs(self.tmp_dir)
@@ -88,7 +89,8 @@ class pdfSplitter():
         to_page_num = [to_page_num[i]-1 if to_page_num[i] > from_page_num[i] else to_page_num[i] for i in range(len(df))]
         to_page_num = to_page_num
         df['to']    = to_page_num
-        self.df = df
+        self.df     = df
+        self.org_df = df
 
 
     def split_pdf(self, output_dir, file_prefix='', src_delete_flag=False, max_num_pages=1000):
@@ -126,12 +128,13 @@ class pdfSplitter():
                     pdf_writer = PyPDF2.PdfFileWriter() ## initialize
                     print('Added page to PDF file: ' + row['title'] + ' - Page #:', end='')
             print()
+            yield int((i+1)/(len(self.df)+1)*100) ## progress
         # Delete temp file
         os.unlink(self.tmp_file)
 
         if src_delete_flag == True or src_delete_flag == "True":
             os.unlink(self.src_file)
-
+        yield 100 ## progress
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
